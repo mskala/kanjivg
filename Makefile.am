@@ -1,6 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
 ACLOCAL_AMFLAGS = -I m4
-@SET_MAKE@
-@INC_AMINCLUDE@
+
+MOSTLYCLEANFILES = \
+   kanji/*.svg kanji_mismatch/*.svg
 
