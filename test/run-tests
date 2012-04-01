@@ -69,10 +69,12 @@ $normal="\e[0m";
 
 ########################################################################
 
-print "${bright}KanjiVG Test Suite$normal\n\n";
-
-# create log dir if needed
+# create log dir if needed, open master log
 -d $log_dir || mkdir $log_dir || die "Can't create log dir";
+open(LOG,">$log_dir/suite.log");
+
+print "${bright}KanjiVG Test Suite$normal\n\n";
+print LOG "KanjiVG Test Suite\n\n";
 
 # find the general tests to do
 @todo_tests=();
@@ -114,6 +116,8 @@ if ($do_pk) {
 if ($do_pk && ($#todo_pk_tests>=0) && ($#todo_kanji>=0)) {
   print 'Running '.($#todo_pk_tests+1).' per-kanji tests on '.
     ($#todo_kanji+1)." kanji...\n";
+  print LOG 'Running '.($#todo_pk_tests+1).' per-kanji tests on '.
+    ($#todo_kanji+1)." kanji...\n";
 
   $count_pk_pass=0;
   $count_pk_fail=0;
@@ -132,19 +136,22 @@ if ($do_pk && ($#todo_pk_tests>=0) && ($#todo_kanji>=0)) {
     }
     printf '%5d/%5d %s %-24s',
       $kcount,$#todo_kanji+1,$literal,$kanji;
+    printf LOG '%5d/%5d %s %-24s',
+      $kcount,$#todo_kanji+1,$literal,$kanji;
 
     $count_this_pass=0;
     $count_this_fail=0;
     $count_this_skip=0;
     $count_this_epic=0;
     
-    unlink "$log_dir/$kanji.log";
+    open(KLOG,">$log_dir/$kanji.log");
+    print KLOG "Test report for $kanji $literal\n";
     
     foreach (@todo_pk_tests) {
       $tcount++;
       if (($child=fork)==0) {
-        open(STDOUT,'>>',"$log_dir/$kanji.log");
-        open(STDERR,'>&STDOUT');
+        open(STDOUT,'>&KLOG');
+        open(STDERR,'>&KLOG');
         exec "$test_dir/$_",$kanji;
         exit(255);
       }
@@ -153,72 +160,108 @@ if ($do_pk && ($#todo_pk_tests>=0) && ($#todo_kanji>=0)) {
       if ($result==0) {
         $count_pk_pass++;
         $count_this_pass++;
+        print KLOG "PASS: $_\n";
       } elsif ($result==77) {
         $count_pk_skip++;
         $count_this_skip++;
+        print KLOG "SKIP: $_\n";
       } elsif ($result==99) {
         $count_pk_epic++;
         $count_this_epic++;
+        print KLOG "EPIC: $_\n";
       } else {
         $count_pk_fail++;
         $count_this_fail++;
+        print KLOG "FAIL: $_\n";
       }
     }
     
+    print KLOG "\nTOTALS: ";
+    
     if ($count_this_pass>0) {
       printf " %3d ${green}PASS$normal",$count_this_pass;
+      printf LOG " %3d PASS",$count_this_pass;
+      printf KLOG " %d PASS",$count_this_pass;
     } else {
       print  '         ';
+      print  LOG '         ';
     }
     if ($count_this_fail>0) {
       printf " %3d ${red}FAIL$normal",$count_this_fail;
+      printf LOG " %3d FAIL",$count_this_fail;
+      printf KLOG " %d FAIL",$count_this_fail;
     } else {
       print  '         ';
+      print  LOG '         ';
     }
     if ($count_this_skip>0) {
       printf " %3d ${cyan}SKIP$normal",$count_this_skip;
+      printf LOG " %3d SKIP",$count_this_skip;
+      printf KLOG " %d SKIP",$count_this_skip;
     } else {
       print  '         ';
+      print  LOG '         ';
     }
     if ($count_this_epic>0) {
       printf " %3d ${magenta}EPIC$normal",$count_this_epic;
+      printf LOG " %3d EPIC",$count_this_epic;
+      printf KLOG " %d EPIC",$count_this_epic;
     }
     print "\n";
+    print LOG "\n";
+    
+    close(KLOG);
   }
   print 'Per-kanji test subtotals';
+  print LOG 'Per-kanji test subtotals';
   $flag=0;
   if ($count_pk_pass>0) {
     printf " %d/%d (%.01f%%) passed",
+      $count_pk_pass,$tcount,100*$count_pk_pass/$tcount;
+    printf LOG " %d/%d (%.01f%%) passed",
       $count_pk_pass,$tcount,100*$count_pk_pass/$tcount;
     $flag=1;
   }
   if ($count_pk_fail>0) {
     print ';' if $flag;
+    print LOG ';' if $flag;
     printf " %d/%d (%.01f%%) failed",
+      $count_pk_fail,$tcount,100*$count_pk_fail/$tcount;
+    printf LOG " %d/%d (%.01f%%) failed",
       $count_pk_fail,$tcount,100*$count_pk_fail/$tcount;
     $flag=1;
   }
   if ($count_pk_skip>0) {
     print ';' if $flag;
+    print LOG ';' if $flag;
     printf " %d/%d (%.01f%%) skipped",
+      $count_pk_skip,$tcount,100*$count_pk_skip/$tcount;
+    printf LOG " %d/%d (%.01f%%) skipped",
       $count_pk_skip,$tcount,100*$count_pk_skip/$tcount;
     $flag=1;
   }
   if ($count_pk_epic>0) {
     print ';' if $flag;
+    print LOG ';' if $flag;
     printf " %d/%d (%.01f%%) epic failed",
+      $count_pk_epic,$tcount,100*$count_pk_epic/$tcount;
+    printf LOG " %d/%d (%.01f%%) epic failed",
       $count_pk_epic,$tcount,100*$count_pk_epic/$tcount;
   }
   print ".\n\n";
+  print LOG ".\n\n";
 }
 
 # run general tests
 if ($#todo_tests>=0) {
   print 'Running '.($#todo_tests+1)." general tests...\n";
+  print LOG 'Running '.($#todo_tests+1)." general tests...\n";
+
   $count_pass=0;
   $count_fail=0;
   $count_skip=0;
   $count_epic=0;
+
   foreach (@todo_tests) {
     if (($child=fork)==0) {
       open(STDOUT,'>',"$log_dir/$_.log");
@@ -231,42 +274,59 @@ if ($#todo_tests>=0) {
     if ($result==0) {
       $count_pass++;
       print "${green}PASS$normal: $_\n";
+      print LOG "PASS: $_\n";
     } elsif ($result==77) {
       $count_skip++;
       print "${cyan}SKIP$normal: $_\n";
+      print LOG "SKIP: $_\n";
     } elsif ($result==99) {
       $count_epic++;
       print "${magenta}EPIC$normal: $_\n";
+      print LOG "EPIC: $_\n";
     } else {
       $count_fail++;
       print "${red}FAIL$normal: $_\n";
+      print LOG "FAIL: $_\n";
     }
   }
   print 'General test subtotals';
+  print LOG 'General test subtotals';
   $flag=0;
   if ($count_pass>0) {
     printf " %d/%d (%.01f%%) passed",
+      $count_pass,$#todo_tests+1,100*$count_pass/($#todo_tests+1);
+    printf LOG " %d/%d (%.01f%%) passed",
       $count_pass,$#todo_tests+1,100*$count_pass/($#todo_tests+1);
     $flag=1;
   }
   if ($count_fail>0) {
     print ';' if $flag;
+    print LOG ';' if $flag;
     printf " %d/%d (%.01f%%) failed",
+      $count_fail,$#todo_tests+1,100*$count_fail/($#todo_tests+1);
+    printf LOG " %d/%d (%.01f%%) failed",
       $count_fail,$#todo_tests+1,100*$count_fail/($#todo_tests+1);
     $flag=1;
   }
   if ($count_skip>0) {
     print ';' if $flag;
+    print LOG ';' if $flag;
     printf " %d/%d (%.01f%%) skipped",
+      $count_skip,$#todo_tests+1,100*$count_skip/($#todo_tests+1);
+    printf LOG " %d/%d (%.01f%%) skipped",
       $count_skip,$#todo_tests+1,100*$count_skip/($#todo_tests+1);
     $flag=1;
   }
   if ($count_epic>0) {
     print ';' if $flag;
+    print LOG ';' if $flag;
     printf " %d/%d (%.01f%%) epic failed",
+      $count_epic,$#todo_tests+1,100*$count_epic/($#todo_tests+1);
+    printf LOG " %d/%d (%.01f%%) epic failed",
       $count_epic,$#todo_tests+1,100*$count_epic/($#todo_tests+1);
   }
   print ".\n\n";
+  print LOG ".\n\n";
 }
 
 # return value of suite based on the worst result, or skip if none
@@ -274,20 +334,32 @@ if ($count_epic+$count_pk_epic>0) {
   print "${magenta}=======================\n"
                  ."Test suite EPIC FAILED.\n"
                  ."=======================$normal\n";
+  print LOG "=======================\n"
+           ."Test suite EPIC FAILED.\n"
+           ."=======================\n";
   exit 99;
 } elsif ($count_fail+$count_pk_fail>0) {
   print "${red}==================\n"
              ."Test suite FAILED.\n"
              ."==================$normal\n";
+  print LOG "==================\n"
+           ."Test suite FAILED.\n"
+           ."==================\n";
   exit 1;
 } elsif ($count_pass+$count_pk_pass>0) {
   print "${green}==================\n"
                ."Test suite PASSED.\n"
                ."==================$normal\n";
+  print LOG "==================\n"
+           ."Test suite PASSED.\n"
+           ."==================\n";
   exit 0;
 } else {
   print "${cyan}===================\n"
               ."Test suite SKIPPED.\n"
               ."===================$normal\n";
+  print LOG "===================\n"
+           ."Test suite SKIPPED.\n"
+           ."===================\n";
   exit 77;
 }
