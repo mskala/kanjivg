@@ -66,6 +66,8 @@ $normal="\e[0m";
 
 print "${bright}KanjiVG Test Suite$normal\n\n";
 
+# create directories if needed FIXME
+
 # find the general tests to do
 @todo_tests=();
 $do_pk=0;
