@@ -6,8 +6,6 @@ kanjivg-*xml.gz
 kanjivg-*.zip
 parse-xml.pl
 # directories of generated output, which should not be in repository
-kanji/
-kanji_mismatch/
 Makefile.in
 aclocal.m4
 autom4te.cache/
