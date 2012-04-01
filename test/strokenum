@@ -1,0 +1,40 @@
+#!/usr/bin/perl -CDS
+
+# KanjiVG per-kanji test
+# checks that stroke numbers exist and are consistent
+
+$exit_code=0;
+$max_stroke=0;
+
+open(SVG,'kanji/'.shift.'.svg');
+while (<SVG>) {
+  if (/<path /) {
+    $strokes++;
+    if (/ kvg:strokenum="(.*?)"/) {
+      $num=$1;
+      if (($num==int($num)) && ($num>0)) {
+        $count{$num}++;
+        $max_stroke=$num if $num>$max_stroke;
+      } else {
+        print "Bad stroke number \"$num\"\n";
+        $exit_code=1;
+      }
+    } else {
+      print "Stroke without a number (sequential index $strokes)\n";
+      $exit_code=1;
+    }
+  } elsif (/ kvg:strokenum="(.*?)"/) {
+    print "Stroke number attribute other than in a path tag\n";
+    $exit_code=1;
+  }
+}
+close(SVG);
+
+for ($i=1;$i<$max_stroke;$i++) {
+  if ($count{$i}!=1) {
+    print "There are $count{$i} strokes with number $i\n";
+    $exit_code=1;
+  }
+}
+
+exit $exit_code;

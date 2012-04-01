@@ -44,7 +44,7 @@ $kanji_regexp='^kanji/(.*?)\.svg$';
 # variable.  The special value "per-kanji" is handled internally and means
 # "run all the per-kanji tests described below".
 %tests=(
-  'dummy'    =>'dummy test to test the scripts',
+# 'dummy'    =>'dummy test to test the scripts',
   'per-kanji'=>'run the PK_TESTS tests on individual kanji',
 );
 
@@ -53,7 +53,8 @@ $kanji_regexp='^kanji/(.*?)\.svg$';
 # command-line parameter.  Can be overridden by the PK_TESTS environment
 # variable.
 %pk_tests=(
-  'dummy-pk' =>'dummy test to test the scripts',
+# 'dummy-pk' =>'dummy test to test the scripts',
+  'strokenum'=>'check the kvg:strokenum attribute',
   'xml'      =>'basic XML parse',
 );
 
