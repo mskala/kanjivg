@@ -17,3 +17,6 @@ kanji/.generated: \
 	rm -rf kanji/ kanji_mismatch/
 	$(PYTHON_BIN)2 mergexml.py
 	touch kanji/.generated
+
+check:
+	$(PERL) test/run-tests
