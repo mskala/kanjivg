@@ -1,6 +1,17 @@
+# lines present in upstream
 *~
 kanjivg.xml
 *.pyc
 kanjivg-*xml.gz
 kanjivg-*.zip
 parse-xml.pl
+# directories of generated output, which should not be in repository
+Makefile.in
+aclocal.m4
+autom4te.cache/
+configure
+install-sh
+missing
+Makefile
+config.log
+config.status

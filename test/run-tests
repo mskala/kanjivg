@@ -1,0 +1,183 @@
+#!/usr/bin/perl
+
+# Test suite runner by Matthew Skala
+# Copyright and licensing still to be decided, beware
+
+# This is intended to serve a purpose similar to that of Automake's test
+# suite, but suitable for KanjiVG.  In particular, Automake's test suite
+# tries to create shell commands that include a list of all the tests to
+# be run.  We have (at this writing, likely more in the future) 11000
+# tests.  That's more than will fit in a shell command line, so Automake
+# dies horribly.
+
+########################################################################
+
+# Directory for tests.
+$test_dir='test';
+
+# Directory for test logs.  All directories are relative to current working
+# dir when this script is invoked.  Will be created if necessary.
+$log_dir='test-logs';
+
+# Matching pattern for kanji filenames - shell glob.  All files matching
+# this will be considered to indicate the existence of kanji.  If a
+# KANJI_GLOB environment variable exists, that will be used instead (allows
+# checking just a subset of the kanji).
+$kanji_glob='kanji/*.svg';
+
+# Matching pattern for kanji filenames - regular expression.  Given that
+# a file matching the shell glob exists, this pattern will be applied, and
+# if it also matches, the first matching register ($1) will be taken as the
+# ID of the kanji.  With duplicates removed, the resulting list will feed
+# into the "per-kanji" tests described below.
+$kanji_regexp='^kanji/(.*?)\.svg$';
+
+# List of general tests.  Keys are test names, and should be executable
+# files in the test directory.  Values are short descriptions.  Interface is
+# somewhat like that of Automake tests: exit value should be 0, 1, 77, or 99
+# for "pass," "fail," "skip" (unable to provide a useful result, not a true
+# pass but should not cause overall failure), or "epic fail" (cause overall
+# failure even if the user said to skip).  By default, all tests listed in
+# this array will be run.  Can be overridden by the TESTS environment
+# variable.  The special value "per-kanji" is handled internally and means
+# "run all the per-kanji tests described below".
+%tests=(
+  'per-kanji'=>'run the PK_TESTS tests on individual kanji',
+);
+
+# List of per-kanji tests.  Much like the general tests above, except each
+# one will be run multiple times, each time giving it a kanji ID as a
+# command-line parameter.  Can be overridden by the PK_TESTS environment
+# variable.
+%pk_tests=(
+);
+
+########################################################################
+
+# ANSI escape sequences
+$green="\e[32m";
+$red="\e[31m";
+$cyan="\e[36m";
+$magenta="\e[35m";
+$bright="\e[1m";
+$normal="\e[0m";
+
+########################################################################
+
+print "${bright}KanjiVG Test Suite$normal\n\n";
+
+# find the general tests to do
+@todo_tests=();
+$do_pk=0;
+if (exists $ENV{'TESTS'}) {
+  @cfg_tests=split(/[, :]+/,$ENV{'TESTS'});
+} else {
+  @cfg_tests=keys %tests;
+}
+foreach (@cfg_tests) {
+  if ($_ eq 'per-kanji') {
+    $do_pk=1;
+  } elsif (exists $tests{$_}) {
+    push @todo_tests,$_;
+  }
+}
+@todo_tests=sort @todo_tests;
+
+if ($do_pk) {
+
+  # find the per-kanji tests to do
+  if (exists $ENV{'PK_TESTS'}) {
+    @todo_pk_tests=split(/[, :]+/,$ENV{'PK_TESTS'});
+  } else {
+    @todo_pk_tests=keys %pk_tests;
+  }
+
+  # find the kanji IDs
+  @todo_kanji=();
+  $kanji_glob=$ENV{'KANJI_GLOB'} if exists $ENV{'KANJI_GLOB'};
+  foreach (glob $kanji_glob) {
+    if (/$kanji_regexp/) {
+      push @todo_kanji,$1;
+    }
+  }
+  @todo_kanji=sort @todo_kanji;
+
+}
+
+# run general tests
+if ($#todo_tests>=0) {
+  print 'Running '.($#todo_tests+1)." general tests...\n";
+  $count_pass=0;
+  $count_fail=0;
+  $count_skip=0;
+  $count_epic=0;
+  foreach (@todo_tests) {
+    if (($child=fork)==0) {
+      open(STDOUT,'>',"$log_dir/$_.log");
+      open(STDERR,'>&STDOUT');
+      exec $_;
+    }
+    $result=waitpid($child,0);
+    if ($result==0) {
+      $count_pass++;
+      print "${green}PASS$normal: $_\n";
+    } elsif ($result==77) {
+      $count_skip++;
+      print "${cyan}SKIP$normal: $_\n";
+    } elsif ($result==99) {
+      $count_epic++;
+      print "${magenta}EPIC$normal: $_\n";
+    } else {
+      $count_fail++;
+      print "${red}FAIL$normal: $_\n";
+    }
+  }
+  print 'General test subtotals';
+  $flag=0;
+  if ($count_pass>0) {
+    printf " %d/%d (%.01f) passed",
+      $count_pass,$#todo_tests+1,100*$count_pass/($#todo_tests+1);
+    $flag=1;
+  }
+  if ($count_fail>0) {
+    print ';' if $flag;
+    printf " %d/%d (%.01f) failed",
+      $count_fail,$#todo_tests+1,100*$count_fail/($#todo_tests+1);
+    $flag=1;
+  }
+  if ($count_skip>0) {
+    print ';' if $flag;
+    printf " %d/%d (%.01f) skipped",
+      $count_skip,$#todo_tests+1,100*$count_skip/($#todo_tests+1);
+    $flag=1;
+  }
+  if ($count_epic>0) {
+    print ';' if $flag;
+    printf " %d/%d (%.01f) epic failed",
+      $count_epic,$#todo_tests+1,100*$count_epic/($#todo_tests+1);
+  }
+  print ".\n\n";
+}
+
+# return value of suite based on the worst result, or skip if none
+if ($count_epic>0) {
+  print "${magenta}=======================\n"
+                 ."Test suite EPIC FAILED.\n"
+                 ."=======================$normal\n";
+  exit 99;
+} elsif ($count_fail>0) {
+  print "${red}==================\n"
+             ."Test suite FAILED.\n"
+             ."==================$normal\n";
+  exit 1;
+} elsif ($count_pass>0) {
+  print "${green}==================\n"
+               ."Test suite PASSED.\n"
+               ."==================$normal\n";
+  exit 0;
+} else {
+  print "${cyan}===================\n"
+              ."Test suite SKIPPED.\n"
+              ."===================$normal\n";
+  exit 77;
+}
