@@ -5,7 +5,7 @@ AC_PREREQ([2.68])
 AC_INIT([KanjiVG], [0.0], [kanjivg@googlegroups.com], [kanjivg],
         [http://kanjivg.tagaini.net/])
 AC_PRESERVE_HELP_ORDER
-AM_INIT_AUTOMAKE([foreign check-news silent-rules])
+AM_INIT_AUTOMAKE([foreign check-news silent-rules color-tests])
 AC_CONFIG_SRCDIR([kvg.py])
 AC_CONFIG_MACRO_DIR([m4])
 AC_COPYRIGHT([Copyright (C) 2009, 2010, 2011, 2012 Ulrich Apel])
