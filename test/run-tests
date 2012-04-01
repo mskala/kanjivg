@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -CDS
 
 # Test suite runner by Matthew Skala
 # Copyright and licensing still to be decided, beware
@@ -10,6 +10,8 @@
 # tests.  That's more than will fit in a shell command line, so Automake
 # dies horribly.
 
+use utf8;
+
 ########################################################################
 
 # Directory for tests.
@@ -17,7 +19,7 @@ $test_dir='test';
 
 # Directory for test logs.  All directories are relative to current working
 # dir when this script is invoked.  Will be created if necessary.
-$log_dir='test-logs';
+$log_dir='test_log';
 
 # Matching pattern for kanji filenames - shell glob.  All files matching
 # this will be considered to indicate the existence of kanji.  If a
@@ -42,6 +44,7 @@ $kanji_regexp='^kanji/(.*?)\.svg$';
 # variable.  The special value "per-kanji" is handled internally and means
 # "run all the per-kanji tests described below".
 %tests=(
+  'dummy'    =>'dummy test to test the scripts',
   'per-kanji'=>'run the PK_TESTS tests on individual kanji',
 );
 
@@ -50,6 +53,7 @@ $kanji_regexp='^kanji/(.*?)\.svg$';
 # command-line parameter.  Can be overridden by the PK_TESTS environment
 # variable.
 %pk_tests=(
+  'dummy-pk' =>'dummy test to test the scripts',
 );
 
 ########################################################################
@@ -66,7 +70,8 @@ $normal="\e[0m";
 
 print "${bright}KanjiVG Test Suite$normal\n\n";
 
-# create directories if needed FIXME
+# create log dir if needed
+-d $log_dir || mkdir $log_dir || die "Can't create log dir";
 
 # find the general tests to do
 @todo_tests=();
@@ -86,7 +91,6 @@ foreach (@cfg_tests) {
 @todo_tests=sort @todo_tests;
 
 if ($do_pk) {
-
   # find the per-kanji tests to do
   if (exists $ENV{'PK_TESTS'}) {
     @todo_pk_tests=split(/[, :]+/,$ENV{'PK_TESTS'});
@@ -103,7 +107,108 @@ if ($do_pk) {
     }
   }
   @todo_kanji=sort @todo_kanji;
+}
 
+# run per-kanji tests
+if ($do_pk && ($#todo_pk_tests>=0) && ($#todo_kanji>=0)) {
+  print 'Running '.($#todo_pk_tests+1).' per-kanji tests on '.
+    ($#todo_kanji+1)." kanji...\n";
+  $count_pk_pass=0;
+  $count_pk_fail=0;
+  $count_pk_skip=0;
+  $count_pk_epic=0;
+  $kcount=0;
+  foreach $kanji (@todo_kanji) {
+    $kcount++;
+    if ($kanji=~/([0-9a-f]{5})/) {
+      $code=hex("0x$1");
+      $literal=($code<0x2a00?' (':'(').chr(hex("0x$1")).')';
+    } else {
+      $literal='    ';
+    }
+    printf '%5d/%5d %s %-24s',
+      $kcount,$#todo_kanji+1,$literal,$kanji;
+
+    $count_this_pass=0;
+    $count_this_fail=0;
+    $count_this_skip=0;
+    $count_this_epic=0;
+    
+    unlink "$log_dir/$kanji.log";
+    
+    foreach (@todo_pk_tests) {
+      if (($child=fork)==0) {
+        open(STDOUT,'>>',"$log_dir/$kanji.log");
+        open(STDERR,'>&STDOUT');
+        exec "$test_dir/$_",$kanji;
+        exit(255);
+      }
+      waitpid($child,0);
+      $result=$?>>8;
+      if ($result==0) {
+        $count_pk_pass++;
+        $count_this_pass++;
+      } elsif ($result==77) {
+        $count_pk_skip++;
+        $count_this_skip++;
+      } elsif ($result==99) {
+        $count_pk_epic++;
+        $count_this_epic++;
+      } else {
+        $count_pk_fail++;
+        $count_this_fail++;
+      }
+    }
+    
+    if ($count_this_pass>0) {
+      printf " %3d ${green}PASS$normal",$count_this_pass;
+    } else {
+      print  '         ';
+    }
+    if ($count_this_fail>0) {
+      printf " %3d ${red}FAIL$normal",$count_this_fail;
+    } else {
+      print  '         ';
+    }
+    if ($count_this_skip>0) {
+      printf " %3d ${cyan}SKIP$normal",$count_this_skip;
+    } else {
+      print  '         ';
+    }
+    if ($count_this_epic>0) {
+      printf " %3d ${magenta}EPIC$normal",$count_this_epic;
+    }
+    print "\n";
+  }
+  print 'Per-kanji test subtotals';
+  $flag=0;
+  if ($count_pk_pass>0) {
+    printf " %d/%d (%.01f%%) passed",
+      $count_pk_pass,$#todo_tests+1,
+        100*$count_pk_pass/(($#todo_kanji+1)*($#todo_tests+1));
+    $flag=1;
+  }
+  if ($count_pk_fail>0) {
+    print ';' if $flag;
+    printf " %d/%d (%.01f%%) failed",
+      $count_pk_fail,$#todo_tests+1,
+        100*$count_pk_fail/(($#todo_kanji+1)*($#todo_tests+1));
+    $flag=1;
+  }
+  if ($count_pk_skip>0) {
+    print ';' if $flag;
+    printf " %d/%d (%.01f%%) skipped",
+      $count_pk_skip,$#todo_tests+1,
+        100*$count_pk_skip/(($#todo_kanji+1)*($#todo_tests+1));
+    $flag=1;
+  }
+  if ($count_pk_epic>0) {
+    print ';' if $flag;
+    printf " %d/%d (%.01f%%) epic failed",
+      $count_pk_epic,$#todo_tests+1,
+        100*$count_pk_epic/(($#todo_kanji+1)*($#todo_tests+1));
+  }
+  print ".\n\n";
 }
 
 # run general tests
@@ -117,9 +222,11 @@ if ($#todo_tests>=0) {
     if (($child=fork)==0) {
       open(STDOUT,'>',"$log_dir/$_.log");
       open(STDERR,'>&STDOUT');
-      exec $_;
+      exec "$test_dir/$_";
+      exit(255);
     }
-    $result=waitpid($child,0);
+    waitpid($child,0);
+    $result=$?>>8;
     if ($result==0) {
       $count_pass++;
       print "${green}PASS$normal: $_\n";
@@ -137,42 +244,42 @@ if ($#todo_tests>=0) {
   print 'General test subtotals';
   $flag=0;
   if ($count_pass>0) {
-    printf " %d/%d (%.01f) passed",
+    printf " %d/%d (%.01f%%) passed",
       $count_pass,$#todo_tests+1,100*$count_pass/($#todo_tests+1);
     $flag=1;
   }
   if ($count_fail>0) {
     print ';' if $flag;
-    printf " %d/%d (%.01f) failed",
+    printf " %d/%d (%.01f%%) failed",
       $count_fail,$#todo_tests+1,100*$count_fail/($#todo_tests+1);
     $flag=1;
   }
   if ($count_skip>0) {
     print ';' if $flag;
-    printf " %d/%d (%.01f) skipped",
+    printf " %d/%d (%.01f%%) skipped",
       $count_skip,$#todo_tests+1,100*$count_skip/($#todo_tests+1);
     $flag=1;
   }
   if ($count_epic>0) {
     print ';' if $flag;
-    printf " %d/%d (%.01f) epic failed",
+    printf " %d/%d (%.01f%%) epic failed",
       $count_epic,$#todo_tests+1,100*$count_epic/($#todo_tests+1);
   }
   print ".\n\n";
 }
 
 # return value of suite based on the worst result, or skip if none
-if ($count_epic>0) {
+if ($count_epic+$count_pk_epic>0) {
   print "${magenta}=======================\n"
                  ."Test suite EPIC FAILED.\n"
                  ."=======================$normal\n";
   exit 99;
-} elsif ($count_fail>0) {
+} elsif ($count_fail+$count_fail>0) {
   print "${red}==================\n"
              ."Test suite FAILED.\n"
              ."==================$normal\n";
   exit 1;
-} elsif ($count_pass>0) {
+} elsif ($count_pass+$count_pass>0) {
   print "${green}==================\n"
                ."Test suite PASSED.\n"
                ."==================$normal\n";
