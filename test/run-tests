@@ -137,8 +137,6 @@ if ($do_pk && ($#todo_pk_tests>=0) && ($#todo_kanji>=0)) {
     }
     printf '%5d/%5d %s %-24s',
       $kcount,$#todo_kanji+1,$literal,$kanji;
-    printf LOG '%5d/%5d %s %-24s',
-      $kcount,$#todo_kanji+1,$literal,$kanji;
 
     $count_this_pass=0;
     $count_this_fail=0;
@@ -177,12 +175,21 @@ if ($do_pk && ($#todo_pk_tests>=0) && ($#todo_kanji>=0)) {
       }
     }
     
-    print KLOG "\nTOTALS: ";
-    
+    close(KLOG);
+
+    if ($count_this_fail+$count_this_epic>0) {
+      print LOG "\n";
+      open(KLOG,"$log_dir/$kanji.log");
+      while (<KLOG>) { print LOG; }
+      close(KLOG);
+    }
+
+    printf LOG '%5d/%5d %s %-24s',
+      $kcount,$#todo_kanji+1,$literal,$kanji;
+
     if ($count_this_pass>0) {
       printf " %3d ${green}PASS$normal",$count_this_pass;
       printf LOG " %3d PASS",$count_this_pass;
-      printf KLOG " %d PASS",$count_this_pass;
     } else {
       print  '         ';
       print  LOG '         ';
@@ -190,7 +197,6 @@ if ($do_pk && ($#todo_pk_tests>=0) && ($#todo_kanji>=0)) {
     if ($count_this_fail>0) {
       printf " %3d ${red}FAIL$normal",$count_this_fail;
       printf LOG " %3d FAIL",$count_this_fail;
-      printf KLOG " %d FAIL",$count_this_fail;
     } else {
       print  '         ';
       print  LOG '         ';
@@ -198,7 +204,6 @@ if ($do_pk && ($#todo_pk_tests>=0) && ($#todo_kanji>=0)) {
     if ($count_this_skip>0) {
       printf " %3d ${cyan}SKIP$normal",$count_this_skip;
       printf LOG " %3d SKIP",$count_this_skip;
-      printf KLOG " %d SKIP",$count_this_skip;
     } else {
       print  '         ';
       print  LOG '         ';
@@ -206,12 +211,9 @@ if ($do_pk && ($#todo_pk_tests>=0) && ($#todo_kanji>=0)) {
     if ($count_this_epic>0) {
       printf " %3d ${magenta}EPIC$normal",$count_this_epic;
       printf LOG " %3d EPIC",$count_this_epic;
-      printf KLOG " %d EPIC",$count_this_epic;
     }
     print "\n";
     print LOG "\n";
-    
-    close(KLOG);
   }
   print 'Per-kanji test subtotals';
   print LOG 'Per-kanji test subtotals';
