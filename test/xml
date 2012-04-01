@@ -1,0 +1,39 @@
+#!/usr/bin/perl -CDS
+
+# KanjiVG per-kanji test
+# checks that the file can be parsed as XML and contains no unexpected tags
+
+use XML::Parser;
+use utf8;
+
+$parser=new XML::Parser(Style=>'Subs');
+
+$parser->setHandlers(Char=>\&ignore_char,Start=>\&check_tag);
+
+$exit_code=0;
+
+sub ignore_char { }
+sub check_tag {
+  my($expat,$element)=@_;
+  
+  if (!exists $known_tags{$element}) {
+    print "unknown tag <$element>\n";
+    $exit_code=1;
+  }
+}
+
+%known_tags=(
+  'g'=>1,
+  'path'=>1,
+  'svg'=>1,
+  'text'=>1,
+);
+
+$/=undef;
+open(SVG,'kanji/'.shift.'.svg');
+$_=<SVG>;
+close(SVG);
+$db=$parser->parse($_);
+# parse() calls die() if the parse fails, which is good enough for us
+
+exit $exit_code;

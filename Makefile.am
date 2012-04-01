@@ -18,4 +18,5 @@ kanjivg-@release_date@.xml.gz: kanjivg.xml
 	gzip -c kanjivg.xml >$@
 
 check:
+	rm -rf test_logs
 	$(PERL) -CDS test/run-tests

@@ -25,7 +25,7 @@ $log_dir='test_log';
 # this will be considered to indicate the existence of kanji.  If a
 # KANJI_GLOB environment variable exists, that will be used instead (allows
 # checking just a subset of the kanji).
-$kanji_glob='kanji/*.svg';
+$kanji_glob='kanji/?????.svg';
 
 # Matching pattern for kanji filenames - regular expression.  Given that
 # a file matching the shell glob exists, this pattern will be applied, and
@@ -54,6 +54,7 @@ $kanji_regexp='^kanji/(.*?)\.svg$';
 # variable.
 %pk_tests=(
   'dummy-pk' =>'dummy test to test the scripts',
+  'xml'      =>'basic XML parse',
 );
 
 ########################################################################
@@ -113,11 +114,14 @@ if ($do_pk) {
 if ($do_pk && ($#todo_pk_tests>=0) && ($#todo_kanji>=0)) {
   print 'Running '.($#todo_pk_tests+1).' per-kanji tests on '.
     ($#todo_kanji+1)." kanji...\n";
+
   $count_pk_pass=0;
   $count_pk_fail=0;
   $count_pk_skip=0;
   $count_pk_epic=0;
   $kcount=0;
+  $tcount=0;
+
   foreach $kanji (@todo_kanji) {
     $kcount++;
     if ($kanji=~/([0-9a-f]{5})/) {
@@ -137,6 +141,7 @@ if ($do_pk && ($#todo_pk_tests>=0) && ($#todo_kanji>=0)) {
     unlink "$log_dir/$kanji.log";
     
     foreach (@todo_pk_tests) {
+      $tcount++;
       if (($child=fork)==0) {
         open(STDOUT,'>>',"$log_dir/$kanji.log");
         open(STDERR,'>&STDOUT');
@@ -184,29 +189,25 @@ if ($do_pk && ($#todo_pk_tests>=0) && ($#todo_kanji>=0)) {
   $flag=0;
   if ($count_pk_pass>0) {
     printf " %d/%d (%.01f%%) passed",
-      $count_pk_pass,$#todo_tests+1,
-        100*$count_pk_pass/(($#todo_kanji+1)*($#todo_tests+1));
+      $count_pk_pass,$tcount,100*$count_pk_pass/$tcount;
     $flag=1;
   }
   if ($count_pk_fail>0) {
     print ';' if $flag;
     printf " %d/%d (%.01f%%) failed",
-      $count_pk_fail,$#todo_tests+1,
-        100*$count_pk_fail/(($#todo_kanji+1)*($#todo_tests+1));
+      $count_pk_fail,$tcount,100*$count_pk_fail/$tcount;
     $flag=1;
   }
   if ($count_pk_skip>0) {
     print ';' if $flag;
     printf " %d/%d (%.01f%%) skipped",
-      $count_pk_skip,$#todo_tests+1,
-        100*$count_pk_skip/(($#todo_kanji+1)*($#todo_tests+1));
+      $count_pk_skip,$tcount,100*$count_pk_skip/$tcount;
     $flag=1;
   }
   if ($count_pk_epic>0) {
     print ';' if $flag;
     printf " %d/%d (%.01f%%) epic failed",
-      $count_pk_epic,$#todo_tests+1,
-        100*$count_pk_epic/(($#todo_kanji+1)*($#todo_tests+1));
+      $count_pk_epic,$tcount,100*$count_pk_epic/$tcount;
   }
   print ".\n\n";
 }
@@ -274,12 +275,12 @@ if ($count_epic+$count_pk_epic>0) {
                  ."Test suite EPIC FAILED.\n"
                  ."=======================$normal\n";
   exit 99;
-} elsif ($count_fail+$count_fail>0) {
+} elsif ($count_fail+$count_pk_fail>0) {
   print "${red}==================\n"
              ."Test suite FAILED.\n"
              ."==================$normal\n";
   exit 1;
-} elsif ($count_pass+$count_pass>0) {
+} elsif ($count_pass+$count_pk_pass>0) {
   print "${green}==================\n"
                ."Test suite PASSED.\n"
                ."==================$normal\n";
