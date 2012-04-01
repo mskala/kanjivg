@@ -32,13 +32,14 @@ kvg:radical CDATA #IMPLIED
 kvg:phon CDATA #IMPLIED >
 <!ATTLIST path
 xmlns:kvg CDATA #FIXED "http://kanjivg.tagaini.net"
+kvg:strokenum CDATA #IMPLIED
 kvg:type CDATA #IMPLIED >
 ]>
 <svg xmlns="http://www.w3.org/2000/svg" width="109" height="109" viewBox="0 0 109 109">
 <g id="kvg:StrokePaths_00037" style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;">
 <g id="kvg:00037">
-	<path id="kvg:00037-s1" d="M11.27,17.81c0,3.61,0,13.01,0,17.34"/>
-	<path id="kvg:00037-s2" d="M12.38,17.15c5.35,0,46.48,0,53.71,0C58,35.51,36.73,84.71,33.55,92.65"/>
+	<path id="kvg:00037-s1" kvg:strokenum="1" d="M11.27,17.81c0,3.61,0,13.01,0,17.34"/>
+	<path id="kvg:00037-s2" kvg:strokenum="2" d="M12.38,17.15c5.35,0,46.48,0,53.71,0C58,35.51,36.73,84.71,33.55,92.65"/>
 </g>
 </g>
 <g id="kvg:StrokeNumbers_00037" style="font-size:8;fill:#808080">

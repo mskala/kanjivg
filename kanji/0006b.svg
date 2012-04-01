@@ -32,14 +32,15 @@ kvg:radical CDATA #IMPLIED
 kvg:phon CDATA #IMPLIED >
 <!ATTLIST path
 xmlns:kvg CDATA #FIXED "http://kanjivg.tagaini.net"
+kvg:strokenum CDATA #IMPLIED
 kvg:type CDATA #IMPLIED >
 ]>
 <svg xmlns="http://www.w3.org/2000/svg" width="109" height="109" viewBox="0 0 109 109">
 <g id="kvg:StrokePaths_0006b" style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;">
 <g id="kvg:0006b">
-	<path id="kvg:0006b-s1" d="M13.72,15.43c0,5.35,0,69.79,0,77.16"/>
-	<path id="kvg:0006b-s2" d="M53.56,35.29C42.44,43.1,31.18,50.53,17.3,60.07"/>
-	<path id="kvg:0006b-s3" d="M17.73,60.29c8.81,7.23,30.81,25.71,38.61,32.36"/>
+	<path id="kvg:0006b-s1" kvg:strokenum="1" d="M13.72,15.43c0,5.35,0,69.79,0,77.16"/>
+	<path id="kvg:0006b-s2" kvg:strokenum="2" d="M53.56,35.29C42.44,43.1,31.18,50.53,17.3,60.07"/>
+	<path id="kvg:0006b-s3" kvg:strokenum="3" d="M17.73,60.29c8.81,7.23,30.81,25.71,38.61,32.36"/>
 </g>
 </g>
 <g id="kvg:StrokeNumbers_0006b" style="font-size:8;fill:#808080">

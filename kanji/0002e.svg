@@ -32,6 +32,7 @@ kvg:radical CDATA #IMPLIED
 kvg:phon CDATA #IMPLIED >
 <!ATTLIST path
 xmlns:kvg CDATA #FIXED "http://kanjivg.tagaini.net"
+kvg:strokenum CDATA #IMPLIED
 kvg:type CDATA #IMPLIED >
 ]>
 <svg xmlns="http://www.w3.org/2000/svg" width="109" height="109" viewBox="0 0 109 109">

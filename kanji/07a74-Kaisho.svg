@@ -32,21 +32,22 @@ kvg:radical CDATA #IMPLIED
 kvg:phon CDATA #IMPLIED >
 <!ATTLIST path
 xmlns:kvg CDATA #FIXED "http://kanjivg.tagaini.net"
+kvg:strokenum CDATA #IMPLIED
 kvg:type CDATA #IMPLIED >
 ]>
 <svg xmlns="http://www.w3.org/2000/svg" width="109" height="109" viewBox="0 0 109 109">
 <g id="kvg:StrokePaths_07a74-Kaisho" style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;">
 <g id="kvg:07a74-Kaisho" kvg:element="穴" kvg:radical="general">
 	<g id="kvg:07a74-Kaisho-g1" kvg:element="宀" kvg:position="top">
-		<path id="kvg:07a74-Kaisho-s1" kvg:type="㇑a" d="M20.5,30.5c0,4.25-3.09,15.92-4.5,18.75"/>
+		<path id="kvg:07a74-Kaisho-s1" kvg:type="㇑a" kvg:strokenum="1" d="M20.5,30.5c0,4.25-3.09,15.92-4.5,18.75"/>
 		<g id="kvg:07a74-Kaisho-g2" kvg:element="冖">
-			<path id="kvg:07a74-Kaisho-s2" kvg:type="㇔" d="M20.5,33.75c5-0.5,56.25-6.36,63.25-6.5c12.75-0.25,2.5,8-0.5,10"/>
-			<path id="kvg:07a74-Kaisho-s3" kvg:type="㇖b" d="M47.1,14.25c3.65,2.25,7.39,6.92,8.99,9.78"/>
+			<path id="kvg:07a74-Kaisho-s2" kvg:type="㇔" kvg:strokenum="2" d="M20.5,33.75c5-0.5,56.25-6.36,63.25-6.5c12.75-0.25,2.5,8-0.5,10"/>
+			<path id="kvg:07a74-Kaisho-s3" kvg:type="㇖b" kvg:strokenum="3" d="M47.1,14.25c3.65,2.25,7.39,6.92,8.99,9.78"/>
 		</g>
 	</g>
 	<g id="kvg:07a74-Kaisho-g3" kvg:element="八" kvg:position="bottom">
-		<path id="kvg:07a74-Kaisho-s4" kvg:type="㇒" d="M39.72,55.99c0.03,1.01,0.01,2.98-0.5,4.05C36.2,66.39,21.04,85.24,16,89.47"/>
-		<path id="kvg:07a74-Kaisho-s5" kvg:type="㇏" d="M53,45.25C64.85,49.71,73.25,78,83.12,85.12c3.82,2.76,6.13,4.38,9.88,6.12"/>
+		<path id="kvg:07a74-Kaisho-s4" kvg:type="㇒" kvg:strokenum="4" d="M39.72,55.99c0.03,1.01,0.01,2.98-0.5,4.05C36.2,66.39,21.04,85.24,16,89.47"/>
+		<path id="kvg:07a74-Kaisho-s5" kvg:type="㇏" kvg:strokenum="5" d="M53,45.25C64.85,49.71,73.25,78,83.12,85.12c3.82,2.76,6.13,4.38,9.88,6.12"/>
 	</g>
 </g>
 </g>
