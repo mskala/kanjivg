@@ -1,0 +1,15 @@
+#!/usr/bin/perl -CDS -i -p
+
+$defined_strokenum if /^kvg:strokenum/;
+print "kvg:strokenum CDATA #IMPLIED\n"
+  if (/^kvg:type /) && !$defined_strokenum;
+
+$strokenum=0 if /<\?xml /;
+
+if (/<path (.*) d="/ && !/kvg:strokenum=/) {
+  $strokenum++;
+  $totstrokenum++;
+  s/ d="/ kvg:strokenum="$strokenum" d="/;
+}
+
+END { print STDERR "Added $totstrokenum stroke numbers.\n"; }
