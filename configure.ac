@@ -10,13 +10,18 @@ AC_CONFIG_SRCDIR([kvg.py])
 AC_CONFIG_MACRO_DIR([m4])
 AC_COPYRIGHT([Copyright (C) 2009, 2010, 2011, 2012 Ulrich Apel])
 AM_SILENT_RULES
+AC_SUBST([release_date],[`date +%Y%m%d`])
 
 # Checks for programs.
 AC_PROG_LN_S
 AX_CHECK_GNU_MAKE
+AC_ARG_VAR([GZIP],[gzip])
+AC_PATH_PROG([GZIP],[gzip])
 AC_ARG_VAR([PERL],[Perl])
 AC_PATH_PROG([PERL],[perl])
 AX_PYTHON
+AC_ARG_VAR([ZIP],[zip])
+AC_PATH_PROG([ZIP],[zip])
 
 # Checks for libraries.
 
