@@ -21,18 +21,21 @@ $test_dir='test';
 # dir when this script is invoked.  Will be created if necessary.
 $log_dir='test_log';
 
+# Directory in which to find kanji
+$kanji_dir='kanji';
+
 # Matching pattern for kanji filenames - shell glob.  All files matching
 # this will be considered to indicate the existence of kanji.  If a
 # KANJI_GLOB environment variable exists, that will be used instead (allows
 # checking just a subset of the kanji).
-$kanji_glob='kanji/?????.svg';
+$kanji_glob="$kanji_dir/?????.svg";
 
 # Matching pattern for kanji filenames - regular expression.  Given that
 # a file matching the shell glob exists, this pattern will be applied, and
 # if it also matches, the first matching register ($1) will be taken as the
 # ID of the kanji.  With duplicates removed, the resulting list will feed
 # into the "per-kanji" tests described below.
-$kanji_regexp='^kanji/(.*?)\.svg$';
+$kanji_regexp="^$kanji_dir/(.*?)\.svg\$";
 
 # List of general tests.  Keys are test names, and should be executable
 # files in the test directory.  Values are short descriptions.  Interface is
@@ -71,12 +74,24 @@ $normal="\e[0m";
 
 ########################################################################
 
+# see if we are in "new" mode
+if ($ARGV[0] eq '-n') {
+  shift;
+  $newmode=1;
+} else {
+  $newmode=0;
+}
+
 # create log dir if needed, open master log
 -d $log_dir || mkdir $log_dir || die "Can't create log dir";
 open(LOG,">$log_dir/suite.log");
 
 print "${bright}KanjiVG Test Suite$normal\n\n";
 print LOG "KanjiVG Test Suite\n\n";
+if ($newmode) {
+  print "(using cached results of earlier tests)\n\n";
+  print LOG "(using cached results of earlier tests)\n\n";
+}
 
 # find the general tests to do
 @todo_tests=();
@@ -114,6 +129,13 @@ if ($do_pk) {
   @todo_kanji=sort @todo_kanji;
 }
 
+%result_xlat=(
+  'PASS'=>0,
+  'FAIL'=>1,
+  'SKIP'=>77,
+  'EPIC'=>99,
+);
+
 # run per-kanji tests
 if ($do_pk && ($#todo_pk_tests>=0) && ($#todo_kanji>=0)) {
   print 'Running '.($#todo_pk_tests+1).' per-kanji tests on '.
@@ -144,39 +166,72 @@ if ($do_pk && ($#todo_pk_tests>=0) && ($#todo_kanji>=0)) {
     $count_this_skip=0;
     $count_this_epic=0;
     
-    open(KLOG,">$log_dir/$kanji.log");
-    print KLOG "Test report for $kanji $literal\n";
+    %cached_results=();
+    if ($newmode) {
+    undef $rmtime;
+      ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,
+       $atime,$kmtime,$ctime,$blksize,$blocks)=stat("$kanji_dir/$kanji.svg");
+      ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,
+       $atime,$rmtime,$ctime,$blksize,$blocks)=stat("$log_dir/$kanji.log");
+      if ((defined $rmtime) && ($rmtime>$kmtime)) {
+        open(KLOG,"$log_dir/$kanji.log");
+        while (<KLOG>) {
+          chomp;
+          if (/^(PASS|FAIL|SKIP|EPIC): (\S+)$/) {
+            $cached_results{$2}=$result_xlat{$1};
+          }
+        }
+        close(KLOG);
+        
+        open(KLOG,">>$log_dir/$kanji.log");
+
+      } else {
+        open(KLOG,">$log_dir/$kanji.log");
+        print KLOG "Test report for $kanji $literal\n";
+      }
+    } else {
+      open(KLOG,">$log_dir/$kanji.log");
+      print KLOG "Test report for $kanji $literal\n";
+    }
     
     foreach (@todo_pk_tests) {
       $tcount++;
-      if (($child=fork)==0) {
-        open(STDOUT,'>&KLOG');
-        open(STDERR,'>&KLOG');
-        exec "$test_dir/$_",$kanji;
-        exit(255);
+      
+      $cached=0;
+      if (defined $cached_results{$_}) {
+        $result=$cached_results{$_};
+        $cached=1;
+      } else {
+        if (($child=fork)==0) {
+          open(STDOUT,'>&KLOG');
+          open(STDERR,'>&KLOG');
+          exec "$test_dir/$_",$kanji;
+          exit(255);
+        }
+        waitpid($child,0);
+        $result=$?>>8;
       }
-      waitpid($child,0);
-      $result=$?>>8;
+
       if ($result==0) {
         $count_pk_pass++;
         $count_this_pass++;
         $count_pk_test_pass{$_}++;
-        print KLOG "PASS: $_\n";
+        print KLOG "PASS: $_\n" unless $cached;
       } elsif ($result==77) {
         $count_pk_skip++;
         $count_this_skip++;
         $count_pk_test_skip{$_}++;
-        print KLOG "SKIP: $_\n";
+        print KLOG "SKIP: $_\n" unless $cached;
       } elsif ($result==99) {
         $count_pk_epic++;
         $count_this_epic++;
         $count_pk_test_epic{$_}++;
-        print KLOG "EPIC: $_\n";
+        print KLOG "EPIC: $_\n" unless $cached;
       } else {
         $count_pk_fail++;
         $count_this_fail++;
         $count_pk_test_fail{$_}++;
-        print KLOG "FAIL: $_\n";
+        print KLOG "FAIL: $_\n" unless $cached;
       }
     }
     

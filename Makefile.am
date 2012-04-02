@@ -20,3 +20,7 @@ kanjivg-@release_date@.xml.gz: kanjivg.xml
 check:
 	rm -rf test_logs
 	$(PERL) -CDS test/run-tests
+
+# check only the SVG files that are newer than their logs
+check-new:
+	$(PERL) -CDS test/run-tests -n
