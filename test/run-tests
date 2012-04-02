@@ -54,6 +54,7 @@ $kanji_regexp='^kanji/(.*?)\.svg$';
 # variable.
 %pk_tests=(
 # 'dummy-pk' =>'dummy test to test the scripts',
+  'gpmix'    =>'check for groups and paths as siblings',
   'strokenum'=>'check the kvg:strokenum attribute',
   'xml'      =>'basic XML parse',
 );
@@ -97,9 +98,9 @@ foreach (@cfg_tests) {
 if ($do_pk) {
   # find the per-kanji tests to do
   if (exists $ENV{'PK_TESTS'}) {
-    @todo_pk_tests=split(/[, :]+/,$ENV{'PK_TESTS'});
+    @todo_pk_tests=sort split(/[, :]+/,$ENV{'PK_TESTS'});
   } else {
-    @todo_pk_tests=keys %pk_tests;
+    @todo_pk_tests=sort keys %pk_tests;
   }
 
   # find the kanji IDs
@@ -159,18 +160,22 @@ if ($do_pk && ($#todo_pk_tests>=0) && ($#todo_kanji>=0)) {
       if ($result==0) {
         $count_pk_pass++;
         $count_this_pass++;
+        $count_pk_test_pass{$_}++;
         print KLOG "PASS: $_\n";
       } elsif ($result==77) {
         $count_pk_skip++;
         $count_this_skip++;
+        $count_pk_test_skip{$_}++;
         print KLOG "SKIP: $_\n";
       } elsif ($result==99) {
         $count_pk_epic++;
         $count_this_epic++;
+        $count_pk_test_epic{$_}++;
         print KLOG "EPIC: $_\n";
       } else {
         $count_pk_fail++;
         $count_this_fail++;
+        $count_pk_test_fail{$_}++;
         print KLOG "FAIL: $_\n";
       }
     }
@@ -215,44 +220,92 @@ if ($do_pk && ($#todo_pk_tests>=0) && ($#todo_kanji>=0)) {
     print "\n";
     print LOG "\n";
   }
-  print 'Per-kanji test subtotals';
-  print LOG 'Per-kanji test subtotals';
-  $flag=0;
+  
+  print "\nSummary of tests on ".($#todo_kanji+1)." kanji\n";
+  print ' 'x16;
+  print $count_pk_pass>0?' -----PASS----- ':' 'x16;
+  print $count_pk_fail>0?' -----FAIL----- ':' 'x16;
+  print $count_pk_skip>0?' -----SKIP----- ':' 'x16;
+  print $count_pk_epic>0?' -----EPIC-----':'';
+  print "\n";
+  print LOG "\nSummary of tests on ".($#todo_kanji+1)." kanji\n";
+  print LOG ' 'x16;
+  print LOG $count_pk_pass>0?' -----PASS----- ':' 'x16;
+  print LOG $count_pk_fail>0?' -----FAIL----- ':' 'x16;
+  print LOG $count_pk_skip>0?' -----SKIP----- ':' 'x16;
+  print LOG $count_pk_epic>0?' -----EPIC-----':'';
+  print LOG "\n";
+  
+  foreach (@todo_pk_tests) {
+    printf "%-16s",$_;
+    printf LOG "%-16s",$_;
+    if ($count_pk_test_pass{$_}>0) {
+      printf " %7d %5.1f%% ",$count_pk_test_pass{$_},
+        100*$count_pk_test_pass{$_}/($#todo_kanji+1);
+      printf LOG " %7d %5.1f%% ",$count_pk_test_pass{$_},
+        100*$count_pk_test_pass{$_}/($#todo_kanji+1);
+    } else {
+      print ' 'x16;
+      print LOG ' 'x16;
+    }
+    if ($count_pk_test_fail{$_}>0) {
+      printf " %7d %5.1f%% ",$count_pk_test_fail{$_},
+        100*$count_pk_test_fail{$_}/($#todo_kanji+1);
+      printf LOG " %7d %5.1f%% ",$count_pk_test_fail{$_},
+        100*$count_pk_test_fail{$_}/($#todo_kanji+1);
+    } else {
+      print ' 'x16;
+      print LOG ' 'x16;
+    }
+    if ($count_pk_test_skip{$_}>0) {
+      printf " %7d %5.1f%% ",$count_pk_test_skip{$_},
+        100*$count_pk_test_skip{$_}/($#todo_kanji+1);
+      printf LOG " %7d %5.1f%% ",$count_pk_test_skip{$_},
+        100*$count_pk_test_skip{$_}/($#todo_kanji+1);
+    } else {
+      print ' 'x16;
+      print LOG ' 'x16;
+    }
+    if ($count_pk_test_epic{$_}>0) {
+      printf " %7d %5.1f%% ",$count_pk_test_epic{$_},
+        100*$count_pk_test_epic{$_}/($#todo_kanji+1);
+      printf LOG " %7d %5.1f%% ",$count_pk_test_epic{$_},
+        100*$count_pk_test_epic{$_}/($#todo_kanji+1);
+    } else {
+      print ' 'x16;
+      print LOG ' 'x16;
+    }
+  }
+  
+  printf "TOTAL  %7d  ",$tcount;
+  printf LOG "TOTAL  %7d  ",$tcount;
   if ($count_pk_pass>0) {
-    printf " %d/%d (%.01f%%) passed",
-      $count_pk_pass,$tcount,100*$count_pk_pass/$tcount;
-    printf LOG " %d/%d (%.01f%%) passed",
-      $count_pk_pass,$tcount,100*$count_pk_pass/$tcount;
-    $flag=1;
+    printf " %7d %5.1f%% ",$count_pk_pass,100*$count_pk_pass/$tcount;
+    printf LOG " %7d %5.1f%% ",$count_pk_pass,100*$count_pk_pass/$tcount;
+  } else {
+    print ' 'x16;
+    print LOG ' 'x16;
   }
   if ($count_pk_fail>0) {
-    print ';' if $flag;
-    print LOG ';' if $flag;
-    printf " %d/%d (%.01f%%) failed",
-      $count_pk_fail,$tcount,100*$count_pk_fail/$tcount;
-    printf LOG " %d/%d (%.01f%%) failed",
-      $count_pk_fail,$tcount,100*$count_pk_fail/$tcount;
-    $flag=1;
+    printf " %7d %5.1f%% ",$count_pk_fail,100*$count_pk_fail/$tcount;
+    printf LOG " %7d %5.1f%% ",$count_pk_fail,100*$count_pk_fail/$tcount;
+  } else {
+    print ' 'x16;
+    print LOG ' 'x16;
   }
   if ($count_pk_skip>0) {
-    print ';' if $flag;
-    print LOG ';' if $flag;
-    printf " %d/%d (%.01f%%) skipped",
-      $count_pk_skip,$tcount,100*$count_pk_skip/$tcount;
-    printf LOG " %d/%d (%.01f%%) skipped",
-      $count_pk_skip,$tcount,100*$count_pk_skip/$tcount;
-    $flag=1;
+    printf " %7d %5.1f%% ",$count_pk_skip,100*$count_pk_skip/$tcount;
+    printf LOG " %7d %5.1f%% ",$count_pk_skip,100*$count_pk_skip/$tcount;
+  } else {
+    print ' 'x16;
+    print LOG ' 'x16;
   }
   if ($count_pk_epic>0) {
-    print ';' if $flag;
-    print LOG ';' if $flag;
-    printf " %d/%d (%.01f%%) epic failed",
-      $count_pk_epic,$tcount,100*$count_pk_epic/$tcount;
-    printf LOG " %d/%d (%.01f%%) epic failed",
-      $count_pk_epic,$tcount,100*$count_pk_epic/$tcount;
+    printf " %7d %5.1f%%",$count_pk_epic,100*$count_pk_epic/$tcount;
+    printf LOG " %7d %5.1f%%",$count_pk_epic,100*$count_pk_epic/$tcount;
   }
-  print ".\n\n";
-  print LOG ".\n\n";
+  print "\n\n";
+  print LOG "\n\n";
 }
 
 # run general tests
