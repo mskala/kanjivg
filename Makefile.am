@@ -9,7 +9,7 @@ pkgdata_DATA = \
   kanjivg-@release_date@-all.zip
 
 kanjivg.xml: kvg.py $(wildcard kanji/*.svg)
-	$(PYTHON_BIN)2 kvg.py release
+	$(PYTHON2_BIN) kvg.py release
 
 kanjivg-@release_date@-all.zip: $(wildcard kanji/*.svg)
 	zip -r $@ kanji

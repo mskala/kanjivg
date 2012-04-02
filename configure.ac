@@ -19,7 +19,7 @@ AC_ARG_VAR([GZIP],[gzip])
 AC_PATH_PROG([GZIP],[gzip])
 AC_ARG_VAR([PERL],[Perl])
 AC_PATH_PROG([PERL],[perl])
-AX_PYTHON
+AX_PYTHON2
 AC_ARG_VAR([ZIP],[zip])
 AC_PATH_PROG([ZIP],[zip])
 

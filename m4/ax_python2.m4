@@ -4,22 +4,27 @@
 #
 # SYNOPSIS
 #
-#   AX_PYTHON
+#   AX_PYTHON2
 #
 # DESCRIPTION
 #
 #   This macro does a complete Python development environment check.
 #
-#   It recurses through several python versions (from 2.1 to 2.6 in this
+#   It recurses through several python versions (from 2.1 to 2.7 in this
 #   version), looking for an executable. When it finds an executable, it
 #   looks to find the header files and library.
 #
-#   It sets PYTHON_BIN to the name of the python executable,
-#   PYTHON_INCLUDE_DIR to the directory holding the header files, and
-#   PYTHON_LIB to the name of the Python library.
+#   It sets PYTHON2_BIN to the name of the python executable,
+#   PYTHON2_INCLUDE_DIR to the directory holding the header files, and
+#   PYTHON2_LIB to the name of the Python library.
 #
-#   This macro calls AC_SUBST on PYTHON_BIN (via AC_CHECK_PROG),
-#   PYTHON_INCLUDE_DIR and PYTHON_LIB.
+#   This macro calls AC_SUBST on PYTHON2_BIN (via AC_CHECK_PROG),
+#   PYTHON2_INCLUDE_DIR and PYTHON2_LIB.
+#
+# MODIFIED
+#
+#   Changed by Matthew Skala, April 2 2012, to look specifically for
+#   Python 2 as opposed to 3.
 #
 # LICENSE
 #
@@ -53,45 +58,45 @@
 
 #serial 9
 
-AC_DEFUN([AX_PYTHON],
+AC_DEFUN([AX_PYTHON2],
 [AC_MSG_CHECKING(for python build information)
 AC_MSG_RESULT([])
-for python in python2.6 python2.5 python2.4 python2.3 python2.2 python2.1 python; do
-AC_CHECK_PROGS(PYTHON_BIN, [$python])
-ax_python_bin=$PYTHON_BIN
-if test x$ax_python_bin != x; then
-   AC_CHECK_LIB($ax_python_bin, main, ax_python_lib=$ax_python_bin, ax_python_lib=no)
-   AC_CHECK_HEADER([$ax_python_bin/Python.h],
-   [[ax_python_header=`locate $ax_python_bin/Python.h | sed -e s,/Python.h,,`]],
-   ax_python_header=no)
-   if test $ax_python_lib != no; then
-     if test $ax_python_header != no; then
+for python in python2.7 python2.6 python2.5 python2.4 python2.3 python2.2 python2.1 python2 python; do
+AC_CHECK_PROGS(PYTHON2_BIN, [$python])
+ax_python2_bin=$PYTHON2_BIN
+if test x$ax_python2_bin != x; then
+   AC_CHECK_LIB($ax_python2_bin, main, ax_python2_lib=$ax_python2_bin, ax_python2_lib=no)
+   AC_CHECK_HEADER([$ax_python2_bin/Python.h],
+   [[ax_python2_header=`locate $ax_python2_bin/Python.h | sed -e s,/Python.h,,`]],
+   ax_python2_header=no)
+   if test $ax_python2_lib != no; then
+     if test $ax_python2_header != no; then
        break;
      fi
    fi
 fi
 done
-if test x$ax_python_bin = x; then
-   ax_python_bin=no
+if test x$ax_python2_bin = x; then
+   ax_python2_bin=no
 fi
-if test x$ax_python_header = x; then
-   ax_python_header=no
+if test x$ax_python2_header = x; then
+   ax_python2_header=no
 fi
-if test x$ax_python_lib = x; then
-   ax_python_lib=no
+if test x$ax_python2_lib = x; then
+   ax_python2_lib=no
 fi
 
-AC_MSG_RESULT([  results of the Python check:])
-AC_MSG_RESULT([    Binary:      $ax_python_bin])
-AC_MSG_RESULT([    Library:     $ax_python_lib])
-AC_MSG_RESULT([    Include Dir: $ax_python_header])
+AC_MSG_RESULT([  results of the Python2 check:])
+AC_MSG_RESULT([    Binary:      $ax_python2_bin])
+AC_MSG_RESULT([    Library:     $ax_python2_lib])
+AC_MSG_RESULT([    Include Dir: $ax_python2_header])
 
-if test x$ax_python_header != xno; then
-  PYTHON_INCLUDE_DIR=$ax_python_header
-  AC_SUBST(PYTHON_INCLUDE_DIR)
+if test x$ax_python2_header != xno; then
+  PYTHON2_INCLUDE_DIR=$ax_python2_header
+  AC_SUBST(PYTHON2_INCLUDE_DIR)
 fi
-if test x$ax_python_lib != xno; then
-  PYTHON_LIB=$ax_python_lib
-  AC_SUBST(PYTHON_LIB)
+if test x$ax_python2_lib != xno; then
+  PYTHON2_LIB=$ax_python2_lib
+  AC_SUBST(PYTHON2_LIB)
 fi
 ])dnl
